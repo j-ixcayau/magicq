@@ -25,11 +25,12 @@ class _MainMapPageState extends State<MainMapPage> {
   String? currentUser;
 
   final mapsInfoTypes = [
-    'Policía',
-    'Bomberos',
+    /* 'Policía',
+    'Bomberos', */
     'Hospitales',
     'Noticias',
-    'Todo',
+    /* 
+    'Todo', */
   ];
 
   @override
