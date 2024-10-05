@@ -1,13 +1,18 @@
+import 'dart:developer';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_auth/firebase_auth.dart' hide User;
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
 import 'package:magiq/features/create_new/create_new_page.dart';
+import 'package:magiq/model/user.dart';
+import 'package:magiq/utils/auth_utils.dart';
 import 'package:magiq/utils/hospitals.dart';
+import 'package:magiq/utils/http/auth.dart';
 
 class MainMapPage extends StatefulWidget {
   const MainMapPage({super.key});
@@ -144,55 +149,41 @@ class _MainMapPageState extends State<MainMapPage> {
     );
   }
 
-  void getUser() {
-    if (FirebaseAuth.instance.currentUser == null) {
-      return;
-    }
-
-    currentUser = FirebaseAuth.instance.currentUser!.photoURL;
-    setState(() {});
-  }
-
   void handleLogin() async {
     if (FirebaseAuth.instance.currentUser != null) {
       return;
     }
-
     try {
-      UserCredential userCredential;
-
-      if (kIsWeb) {
-        // Web login flow
-        GoogleAuthProvider googleProvider = GoogleAuthProvider();
-
-        userCredential =
-            await FirebaseAuth.instance.signInWithPopup(googleProvider);
-      } else {
-        // Android login flow
-        final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
-        if (googleUser == null) {
-          // The user canceled the sign-in
-          return;
-        }
-
-        final GoogleSignInAuthentication googleAuth =
-            await googleUser.authentication;
-        final AuthCredential credential = GoogleAuthProvider.credential(
-          accessToken: googleAuth.accessToken,
-          idToken: googleAuth.idToken,
-        );
-
-        // Authenticate with Firebase
-        userCredential =
-            await FirebaseAuth.instance.signInWithCredential(credential);
-      }
+      AuthUtils.auth();
 
       getUser();
-
-      print('Successfully logged in: ${userCredential.user?.displayName}');
     } catch (e) {
-      print('Error during Google sign-in: $e');
+      log('Error during Google sign-in: $e');
     }
+  }
+
+  void getUser() async {
+    final fbUser = FirebaseAuth.instance.currentUser;
+    if (fbUser == null) {
+      return;
+    }
+
+    final user = User(
+      id: 0,
+      username: fbUser.displayName ?? '',
+      email: fbUser.email!,
+      password: 'p)Aq9T{j/]m;5ur`NBgPt7',
+      isVerified: false,
+      createdAt: DateTime.now(),
+    );
+
+    currentUser = fbUser.photoURL;
+
+    final result = await AuthService().auth(user);
+
+    log(result.toString());
+
+    setState(() {});
   }
 
   void onInfoMapTap(String value) {
