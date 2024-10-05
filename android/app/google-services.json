@@ -12,7 +12,20 @@
           "package_name": "com.magiq.magiq"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "848436920318-409q2jmvo595r1k8voc0rqrj0g5s9qdi.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.magiq.magiq",
+            "certificate_hash": "14edb00b62dc8998dbf5aadaefc90eb97b6913e0"
+          }
+        },
+        {
+          "client_id": "848436920318-aj645o8b250nrukb9gmerkbnm20jaa6v.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyASBxzzZ7fzM5EiS8Bfl-RhvWs3-f95M5M"
@@ -20,7 +33,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "848436920318-aj645o8b250nrukb9gmerkbnm20jaa6v.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

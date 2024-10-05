@@ -14,39 +14,39 @@ class HospitalsInfo {
 
   final _hospitals = [
     {
-      "coordinates":
+      'coordinates':
           const AppLocation(lat: 15.311212609901624, lng: -91.48463748286714),
-      "name": "Altuve"
+      'name': 'Altuve'
     },
     {
-      "coordinates":
+      'coordinates':
           const AppLocation(lat: 15.528169101441524, lng: -89.33438698949656),
-      "name": "CAIMI"
+      'name': 'CAIMI'
     },
     {
-      "coordinates":
+      'coordinates':
           const AppLocation(lat: 14.566617415092514, lng: -89.35099306617573),
-      "name": "Centro Dental Esquipulas"
+      'name': 'Centro Dental Esquipulas'
     },
     {
-      "coordinates":
+      'coordinates':
           const AppLocation(lat: 14.806664149027794, lng: -89.53912499034067),
-      "name": "Centro Médico de Chiquimula"
+      'name': 'Centro Médico de Chiquimula'
     },
     {
-      "coordinates":
+      'coordinates':
           const AppLocation(lat: 14.743608587420862, lng: -91.15887557233752),
-      "name": "Centro Médico San Francisco"
+      'name': 'Centro Médico San Francisco'
     },
     {
-      "coordinates":
+      'coordinates':
           const AppLocation(lat: 15.317172438901494, lng: -89.87609446201802),
-      "name": "Hospital de Santa Catarina La Tinta"
+      'name': 'Hospital de Santa Catarina La Tinta'
     },
     {
-      "coordinates":
+      'coordinates':
           const AppLocation(lat: 15.030725083565796, lng: -91.1570422905057),
-      "name": "Hospital de Santa Elena"
+      'name': 'Hospital de Santa Elena'
     }
   ];
 }
