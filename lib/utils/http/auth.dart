@@ -29,8 +29,15 @@ class AuthService {
       );
 
       if (registerResponse.statusCode == 200) {
-        token = registerResponse.data;
-        return true;
+        final loginRespone = await _dio.post(
+          '$baseUrl/users/login',
+          data: user.toAuthJson(),
+        );
+
+        if (loginRespone.statusCode == 200) {
+          token = loginRespone.data;
+          return true;
+        }
       }
     } catch (e) {
       log(e.toString());

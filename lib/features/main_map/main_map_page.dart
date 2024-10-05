@@ -7,10 +7,14 @@ import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import 'package:magiq/features/create_new/create_new_page.dart';
+import 'package:magiq/model/point.dart';
 import 'package:magiq/model/user.dart';
 import 'package:magiq/utils/auth_utils.dart';
 import 'package:magiq/utils/hospitals.dart';
 import 'package:magiq/utils/http/auth.dart';
+import 'package:magiq/utils/http/point.dart';
+import 'package:magiq/utils/location.dart';
+import 'package:magiq/utils/service_location.dart';
 
 class MainMapPage extends StatefulWidget {
   const MainMapPage({super.key});
@@ -31,7 +35,7 @@ class _MainMapPageState extends State<MainMapPage> {
     /* 'Policía',
     'Bomberos', */
     'Hospitales',
-    'Noticias',
+    'Avisos',
     /* 
     'Todo', */
   ];
@@ -47,40 +51,13 @@ class _MainMapPageState extends State<MainMapPage> {
   Future<void> _setInitialLocation() async {
     try {
       // Request permission and get the current position
-      Position position = await _determinePosition();
+      final position = await AppLocationUtils.determinePosition();
       initialLocation = LatLng(position.latitude, position.longitude);
       setState(() {});
     } catch (e) {
       // If there's an error, fallback to the default initialLocation
       print('Error getting user location: $e');
     }
-  }
-
-  Future<Position> _determinePosition() async {
-    bool serviceEnabled;
-    LocationPermission permission;
-
-    // Check if location services are enabled
-    serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) {
-      throw Exception('Location services are disabled.');
-    }
-
-    // Check for location permissions
-    permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) {
-        throw Exception('Location permissions are denied');
-      }
-    }
-
-    if (permission == LocationPermission.deniedForever) {
-      throw Exception('Location permissions are permanently denied.');
-    }
-
-    // Get the current position
-    return await Geolocator.getCurrentPosition();
   }
 
   @override
@@ -184,7 +161,7 @@ class _MainMapPageState extends State<MainMapPage> {
     setState(() {});
   }
 
-  void onInfoMapTap(String value) {
+  void onInfoMapTap(String value) async {
     _markers.clear();
 
     selectedMapInfo = value;
@@ -201,10 +178,27 @@ class _MainMapPageState extends State<MainMapPage> {
 
         _markers.add(marker);
       }
+    } else if (value == 'Avisos') {
+      final points = await PointService.get();
+
+      for (var it in points) {
+        final marker = Marker(
+          markerId: MarkerId(it.hashCode.toString()),
+          position: it.location,
+          infoWindow: InfoWindow(
+            title: it.title,
+          ),
+          onTap: () => onPointTap(it),
+        );
+
+        _markers.add(marker);
+      }
     }
 
     setState(() {});
   }
+
+  void onPointTap(Point point) {}
 
   void navigateToAddEvent() {
     Navigator.push(
@@ -215,18 +209,5 @@ class _MainMapPageState extends State<MainMapPage> {
         ),
       ),
     );
-  }
-
-  void _addMarker(LatLng position, String name) {
-    final marker = Marker(
-      markerId: MarkerId(position.toString()),
-      position: position,
-      infoWindow: InfoWindow(
-        title: name,
-      ),
-    );
-
-    _markers.add(marker);
-    setState(() {});
   }
 }

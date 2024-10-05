@@ -1,3 +1,5 @@
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+
 import 'package:magiq/model/category.dart';
 import 'package:magiq/model/comment.dart';
 import 'package:magiq/model/notification.dart';
@@ -8,7 +10,7 @@ class Point {
   final int id;
   final String title;
   final String description;
-  final String location;
+  final LatLng location;
   final Category category;
   final String status;
   final String link;
@@ -39,7 +41,10 @@ class Point {
       id: json['id'] as int,
       title: json['title'] as String,
       description: json['description'] as String,
-      location: json['location'] as String,
+      location: LatLng(
+        json['lat'],
+        json['lng'],
+      ),
       category: Category.fromJson(json['category'] as Map<String,
           dynamic>), // Assuming Category class has fromJson method
       status: json['status'] as String,
