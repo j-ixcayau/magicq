@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "848436920318",
+    "project_id": "magic-sc",
+    "storage_bucket": "magic-sc.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:848436920318:android:5905355119a16b8d820aaf",
+        "android_client_info": {
+          "package_name": "com.magiq.magiq"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyASBxzzZ7fzM5EiS8Bfl-RhvWs3-f95M5M"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
