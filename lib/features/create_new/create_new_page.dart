@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 
+import 'package:magiq/model/category.dart';
+import 'package:magiq/utils/http/category.dart';
 import 'package:magiq/utils/upload_image.dart';
 
 class CreateNewPage extends StatefulWidget {
@@ -20,7 +22,6 @@ class CreateNewPage extends StatefulWidget {
 }
 
 class _CreateNewPageState extends State<CreateNewPage> {
-  String? selectedType;
   final TextEditingController titleController = TextEditingController();
   final TextEditingController descriptionController = TextEditingController();
   List<(XFile, Uint8List)> photos = []; // Store multiple selected photos
@@ -28,6 +29,16 @@ class _CreateNewPageState extends State<CreateNewPage> {
   final ImagePicker _picker = ImagePicker();
 
   bool isLoading = false;
+
+  Category? selectedType;
+  List<Category> categories = [];
+
+  @override
+  void initState() {
+    super.initState();
+
+    Future.delayed(Duration.zero, _init);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -69,33 +80,27 @@ class _CreateNewPageState extends State<CreateNewPage> {
                     borderRadius: BorderRadius.circular(4.0),
                   ),
                   child: DropdownButtonHideUnderline(
-                    child: DropdownButton<String>(
+                    child: DropdownButton<Category>(
                       hint: const Padding(
                         padding: EdgeInsets.symmetric(horizontal: 8.0),
                         child: Text('Selecciona la categoría'),
                       ),
                       value: selectedType,
-                      items: [
-                        'Anuncio a la comunidad',
-                        'Reporte ambiental',
-                        'Violencia',
-                        'Emergencias nacionales',
-                        'Obras públicas',
-                        'Anuncios de Canales',
-                      ].map((String type) {
-                        return DropdownMenuItem<String>(
-                          value: type,
-                          child: Padding(
-                            padding:
-                                const EdgeInsets.symmetric(horizontal: 8.0),
-                            child: Text(type),
-                          ),
-                        );
-                      }).toList(),
-                      onChanged: (String? newValue) {
-                        setState(() {
-                          selectedType = newValue;
-                        });
+                      items: categories.map(
+                        (category) {
+                          return DropdownMenuItem(
+                            value: category,
+                            child: Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 8.0),
+                              child: Text(category.name),
+                            ),
+                          );
+                        },
+                      ).toList(),
+                      onChanged: (newValue) {
+                        selectedType = newValue;
+                        setState(() {});
                       },
                       isExpanded: true,
                     ),
@@ -178,6 +183,10 @@ class _CreateNewPageState extends State<CreateNewPage> {
           )
       ],
     );
+  }
+
+  void _init() async {
+    categories = await CategoryService.get();
   }
 
   void _showImageSourceSelection() {

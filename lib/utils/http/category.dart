@@ -3,16 +3,13 @@ import 'dart:developer';
 import 'package:dio/dio.dart';
 
 import 'package:magiq/model/category.dart';
-import 'package:magiq/model/user.dart';
 import 'package:magiq/utils/http/auth.dart';
 
 class CategoryService {
-  final Dio _dio = Dio();
-
-  Future<List<Category>> auth(User user) async {
+  static Future<List<Category>> get() async {
     try {
-      final response = await _dio.get(
-        'http://localhost:3000/categories',
+      final response = await Dio().get(
+        '${AuthService.baseUrl}/categories',
         options: Options(
           headers: {
             'Authorization': 'Bearer ${AuthService.token}',
