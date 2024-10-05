@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 
@@ -21,7 +21,7 @@ class _CreateNewPageState extends State<CreateNewPage> {
   String? selectedType;
   final TextEditingController titleController = TextEditingController();
   final TextEditingController descriptionController = TextEditingController();
-  List<XFile> photos = []; // Store multiple selected photos
+  List<(XFile, Uint8List)> photos = []; // Store multiple selected photos
 
   final ImagePicker _picker = ImagePicker();
 
@@ -122,8 +122,8 @@ class _CreateNewPageState extends State<CreateNewPage> {
                       itemBuilder: (context, index) {
                         return Padding(
                           padding: const EdgeInsets.all(4.0),
-                          child: Image.file(
-                            File(photos[index].path), // Preview image
+                          child: Image.memory(
+                            photos[index].$2,
                             width: 80,
                             height: 80,
                             fit: BoxFit.cover,
@@ -148,22 +148,7 @@ class _CreateNewPageState extends State<CreateNewPage> {
                 const SizedBox(width: 10),
                 Expanded(
                   child: ElevatedButton(
-                    onPressed: () {
-                      if (selectedType != null &&
-                          titleController.text.isNotEmpty &&
-                          descriptionController.text.isNotEmpty) {
-                        onAddMarker(
-                          widget.position,
-                          selectedType!,
-                          titleController.text,
-                          descriptionController.text,
-                          photos
-                              .map((photo) => photo.path)
-                              .toList(), // Pass the list of photo paths
-                        );
-                        Navigator.of(context).pop();
-                      }
-                    },
+                    onPressed: onAddMarker,
                     child: const Text("Agregar"),
                   ),
                 ),
@@ -209,19 +194,24 @@ class _CreateNewPageState extends State<CreateNewPage> {
   Future<void> _pickImage(ImageSource source) async {
     try {
       final pickedFiles = await _picker.pickImage(source: source);
-      if (pickedFiles != null) {
-        photos.add(pickedFiles); // Add selected photos to the list
-        setState(() {});
+      if (pickedFiles == null) {
+        return;
       }
+
+      final info = (pickedFiles, await pickedFiles.readAsBytes());
+
+      photos.add(info);
+      setState(() {});
     } catch (e) {
       // Handle error if needed
       print("Error picking images: $e");
     }
   }
 
-  void onAddMarker(LatLng position, String category, String title,
-      String description, List<String> photoPaths) {
+  void onAddMarker() {
     // Handle the marker addition logic here
     // photoPaths will contain the paths of the selected images
+
+    Navigator.pop(context);
   }
 }
