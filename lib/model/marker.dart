@@ -1,5 +1,4 @@
 import 'package:magiq/model/photo.dart';
-import 'package:magiq/model/user.dart';
 
 class Marker {
   final int id;
@@ -8,7 +7,7 @@ class Marker {
   final String address;
   final String link;
   final DateTime createdAt; // Changed to DateTime for Dart
-  final User user;
+  final String userId;
   final List<Photo> photos;
 
   Marker({
@@ -18,7 +17,7 @@ class Marker {
     required this.address,
     required this.link,
     required this.createdAt,
-    required this.user,
+    required this.userId,
     required this.photos,
   });
 
@@ -32,8 +31,7 @@ class Marker {
       link: json['link'] as String,
       createdAt:
           DateTime.parse(json['created_at'] as String), // Parse the date string
-      user: User.fromJson(json['user']
-          as Map<String, dynamic>), // Assuming User class has fromJson method
+      userId: json['userId'] as String,
       photos: (json['photos'] as List<dynamic>)
           .map((photo) => Photo.fromJson(photo as Map<String, dynamic>))
           .toList(), // Assuming Photo class has fromJson method
@@ -49,7 +47,7 @@ class Marker {
       'address': address,
       'link': link,
       'created_at': createdAt.toIso8601String(), // Convert DateTime to string
-      'user': user.toJson(), // Assuming User class has toJson method
+      'userId': userId,
       'photos': photos
           .map((photo) => photo.toJson())
           .toList(), // Assuming Photo class has toJson method
