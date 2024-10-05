@@ -1,4 +1,4 @@
-package com.magiq.magiq.magiq
+package com.magiq.magiq
 
 import io.flutter.embedding.android.FlutterActivity
 
