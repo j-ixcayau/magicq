@@ -8,6 +8,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:magiq/features/create_new/create_new_page.dart';
 import 'package:magiq/features/curiosity/curiosity_page.dart';
 import 'package:magiq/features/main_map/map_point_dialog.dart';
+import 'package:magiq/features/medal/medal_page.dart';
 import 'package:magiq/features/point/point_screen.dart';
 import 'package:magiq/model/marker.dart' as marker;
 import 'package:magiq/model/medal.dart';
@@ -77,30 +78,33 @@ class _MainMapPageState extends State<MainMapPage> {
           children: [
             if (userImageUrl != null) ...[
               const SizedBox(width: 4),
-              Stack(
-                alignment: Alignment.topRight,
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(24),
-                    child: Image.network(
-                      userImageUrl!,
-                      width: 40,
-                      height: 40,
-                      fit: BoxFit.contain,
-                    ),
-                  ),
-                  if (medalInfo?.$1 != null)
-                    Container(
-                      decoration: const BoxDecoration(
-                          color: Colors.red, shape: BoxShape.circle),
-                      padding: const EdgeInsets.all(1),
-                      child: Text(
-                        '${medalInfo!.$1}',
-                        style:
-                            const TextStyle(color: Colors.white, fontSize: 14),
+              GestureDetector(
+                onTap: onMedalTap,
+                child: Stack(
+                  alignment: Alignment.topRight,
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(24),
+                      child: Image.network(
+                        userImageUrl!,
+                        width: 40,
+                        height: 40,
+                        fit: BoxFit.contain,
                       ),
-                    )
-                ],
+                    ),
+                    if (medalInfo?.$1 != null)
+                      Container(
+                        decoration: const BoxDecoration(
+                            color: Colors.red, shape: BoxShape.circle),
+                        padding: const EdgeInsets.all(1),
+                        child: Text(
+                          '${medalInfo!.$1}',
+                          style: const TextStyle(
+                              color: Colors.white, fontSize: 14),
+                        ),
+                      )
+                  ],
+                ),
               )
             ] else
               IconButton(
@@ -283,8 +287,8 @@ class _MainMapPageState extends State<MainMapPage> {
     showCustomDialog(context, marker.address, null);
   }
 
-  void navigateToAddEvent() {
-    Navigator.push(
+  void navigateToAddEvent() async {
+    await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => CreateNewPage(
@@ -292,6 +296,8 @@ class _MainMapPageState extends State<MainMapPage> {
         ),
       ),
     );
+
+    getUser();
   }
 
   void navigateToCuriosityInfo() async {
@@ -309,5 +315,33 @@ class _MainMapPageState extends State<MainMapPage> {
         ),
       ),
     );
+  }
+
+  void onMedalTap() {
+    final medals = medalInfo?.$2 ?? [];
+
+    if (medals.isEmpty) return;
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => MedalListScreen(
+          puntos: medalInfo?.$1 ?? 0,
+          medals: getUniqueMedals(medals),
+        ),
+      ),
+    );
+  }
+
+  List<Medal> getUniqueMedals(List<Medal> medals) {
+    final seenPoints = <int>{};
+    return medals.where((medal) {
+      // Check if the requiredPoints has been seen before
+      if (seenPoints.contains(medal.requiredPoints)) {
+        return false; // Exclude this medal
+      }
+      seenPoints.add(medal.requiredPoints);
+      return true; // Include this medal
+    }).toList();
   }
 }
