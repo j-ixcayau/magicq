@@ -228,7 +228,7 @@ class _MainMapPageState extends State<MainMapPage> {
   }
 
   void onMarkerTap(marker.Marker marker) {
-    showCustomDialog(context, marker.address, null, marker.photos);
+    showCustomDialog(context, marker.address, null);
   }
 
   void navigateToAddEvent() {

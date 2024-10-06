@@ -22,12 +22,12 @@ class PhotoViewerScreen extends StatefulWidget {
 class _PhotoViewerScreenState extends State<PhotoViewerScreen> {
   List<Comment> _comments = [];
   final TextEditingController _commentController = TextEditingController();
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-
-    Future.delayed(Duration.zero, _getComments);
+    _getComments();
   }
 
   @override
@@ -54,14 +54,18 @@ class _PhotoViewerScreenState extends State<PhotoViewerScreen> {
             if (widget.point.photos.isEmpty)
               const Text('No images to display.')
             else
-              SizedBox(
-                height: 200.0,
+              Expanded(
                 child: CarouselSlider(
                   options: CarouselOptions(
                     height: 200.0,
                     enableInfiniteScroll: true,
                     enlargeCenterPage: true,
                     autoPlay: true,
+                    onPageChanged: (index, reason) {
+                      setState(() {
+                        // Update current index if needed
+                      });
+                    },
                   ),
                   items: widget.point.photos.map((url) {
                     return Container(
@@ -69,8 +73,19 @@ class _PhotoViewerScreenState extends State<PhotoViewerScreen> {
                       child: Image.network(
                         url.url,
                         fit: BoxFit.cover,
+                        loadingBuilder: (context, child, loadingProgress) {
+                          if (loadingProgress == null) return child;
+                          return Center(
+                            child: CircularProgressIndicator(
+                              value: loadingProgress.expectedTotalBytes != null
+                                  ? loadingProgress.cumulativeBytesLoaded /
+                                      (loadingProgress.expectedTotalBytes ?? 1)
+                                  : null,
+                            ),
+                          );
+                        },
                         errorBuilder: (context, error, stackTrace) {
-                          return const Icon(Icons.error);
+                          return const Center(child: Icon(Icons.error));
                         },
                       ),
                     );
@@ -83,52 +98,70 @@ class _PhotoViewerScreenState extends State<PhotoViewerScreen> {
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
             ),
             const SizedBox(height: 8.0),
-            Expanded(
-              child: ListView.builder(
-                itemCount: _comments.length,
-                itemBuilder: (context, index) {
-                  return Card(
-                    elevation: 1,
-                    child: Padding(
-                      padding: const EdgeInsets.all(4.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            _comments[index].userName,
-                            style: const TextStyle(fontSize: 12),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            _comments[index].content,
-                            style: const TextStyle(fontSize: 14),
-                          ),
-                          const SizedBox(height: 4),
-                          if (_comments[index].created != null)
-                            Align(
-                              alignment: Alignment.bottomRight,
-                              child: Text(
-                                _comments[index].formattedDate,
-                                style: const TextStyle(fontSize: 12),
-                              ),
+            _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : Expanded(
+                    child: ListView.builder(
+                      itemCount: _comments.length,
+                      itemBuilder: (context, index) {
+                        return Card(
+                          elevation: 2,
+                          margin: const EdgeInsets.symmetric(vertical: 4),
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  _comments[index].userName,
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  _comments[index].content,
+                                  style: const TextStyle(fontSize: 14),
+                                ),
+                                const SizedBox(height: 4),
+                                if (_comments[index].created != null)
+                                  Align(
+                                    alignment: Alignment.bottomRight,
+                                    child: Text(
+                                      _comments[index].formattedDate,
+                                      style: const TextStyle(fontSize: 12),
+                                    ),
+                                  ),
+                              ],
                             ),
-                        ],
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+            Padding(
+              padding: const EdgeInsets.only(top: 8.0),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _commentController,
+                      decoration: InputDecoration(
+                        hintText: 'Agrega un comentario...',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12.0),
+                          borderSide: const BorderSide(),
+                        ),
                       ),
                     ),
-                  );
-                },
-              ),
-            ),
-            SafeArea(
-              child: TextField(
-                controller: _commentController,
-                decoration: InputDecoration(
-                  hintText: 'Agrega un comentario...',
-                  suffixIcon: IconButton(
-                    icon: const Icon(Icons.send),
-                    onPressed: _addComment,
                   ),
-                ),
+                  const SizedBox(width: 8.0),
+                  ElevatedButton(
+                    onPressed: _addComment,
+                    child: const Text('Enviar'),
+                  ),
+                ],
               ),
             ),
           ],
@@ -138,8 +171,15 @@ class _PhotoViewerScreenState extends State<PhotoViewerScreen> {
   }
 
   void _getComments() async {
+    setState(() {
+      _isLoading = true;
+    });
+
     _comments = await CommentService.get(widget.point.id);
-    setState(() {});
+
+    setState(() {
+      _isLoading = false;
+    });
   }
 
   void _addComment() async {
@@ -152,15 +192,12 @@ class _PhotoViewerScreenState extends State<PhotoViewerScreen> {
       content: _commentController.text.trim(),
       userId: MainMapPage.userId,
       pointId: widget.point.id,
-      userName: '',
+      userName: '', // Get actual user name if available
       created: null,
     );
 
     await CommentService.add(comment);
-
-    _commentController.text = '';
-    setState(() {});
-
-    _getComments();
+    _commentController.clear();
+    _getComments(); // Refresh comments
   }
 }
