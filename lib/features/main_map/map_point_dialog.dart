@@ -25,7 +25,7 @@ void showCustomDialog(
               ],
               const SizedBox(height: 8.0),
               const Text(
-                'Photos:',
+                'Fotos:',
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8.0),

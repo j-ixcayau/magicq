@@ -6,7 +6,7 @@ import 'package:magiq/model/comment.dart';
 import 'package:magiq/utils/http/auth.dart';
 
 class CommentService {
-  static Future<List<Comment>> get(String pointId) async {
+  static Future<List<Comment>> get(int pointId) async {
     try {
       final response = await Dio().get(
         '${AuthService.baseUrl}/comments',
@@ -34,15 +34,11 @@ class CommentService {
   }
 
   // Add a new comment
-  static Future<bool> add(String content, int userId, int pointId) async {
+  static Future<bool> add(Comment comment) async {
     try {
       final response = await Dio().post(
         '${AuthService.baseUrl}/comments',
-        data: {
-          'content': content,
-          'user': userId, // Assuming the API expects userId as a reference
-          'point': pointId, // Assuming the API expects pointId as a reference
-        },
+        data: comment.toJson(),
         options: Options(
           headers: {
             'Authorization': 'Bearer ${AuthService.token}',

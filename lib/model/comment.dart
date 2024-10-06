@@ -1,35 +1,44 @@
+import 'package:intl/intl.dart';
+
 class Comment {
   final int id;
   final String content;
-  final DateTime createdAt;
-  final String userId;
-  final String pointId;
+  final int pointId;
+  final int userId;
+  final String userName;
+  final DateTime? created;
 
   Comment({
     required this.id,
     required this.content,
-    required this.createdAt,
     required this.userId,
     required this.pointId,
+    required this.userName,
+    required this.created,
   });
 
   factory Comment.fromJson(Map<String, dynamic> json) {
+    final created = json['created_at'] as String;
+
     return Comment(
-      id: json['id'] as int,
-      content: json['content'] as String,
-      createdAt: DateTime.parse(json['created_at'] as String),
-      userId: json['userId'] as String,
-      pointId: json['pointId'] as String,
-    );
+        id: json['id'] as int,
+        content: json['content'] as String,
+        pointId: json['point']['id'] as int,
+        userId: json['user']['id'] as int,
+        userName: json['user']['username'] as String,
+        created: DateTime.parse(created));
   }
 
   Map<String, dynamic> toJson() {
     return {
       'id': id,
       'content': content,
-      'created_at': createdAt.toIso8601String(), // Convert DateTime to string
       'userId': userId,
       'pointId': pointId,
     };
   }
+
+  String get formattedDate => (created == null)
+      ? ''
+      : DateFormat('MMMM d, y h:mm a').format(created!.toLocal());
 }
