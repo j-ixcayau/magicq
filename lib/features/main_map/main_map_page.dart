@@ -10,12 +10,14 @@ import 'package:magiq/features/curiosity/curiosity_page.dart';
 import 'package:magiq/features/main_map/map_point_dialog.dart';
 import 'package:magiq/features/point/point_screen.dart';
 import 'package:magiq/model/marker.dart' as marker;
+import 'package:magiq/model/medal.dart';
 import 'package:magiq/model/point.dart';
 import 'package:magiq/model/user.dart';
 import 'package:magiq/utils/auth_utils.dart';
 import 'package:magiq/utils/http/auth.dart';
 import 'package:magiq/utils/http/climate.dart';
 import 'package:magiq/utils/http/marker.dart';
+import 'package:magiq/utils/http/medal.dart';
 import 'package:magiq/utils/http/point.dart';
 import 'package:magiq/utils/location.dart';
 
@@ -36,6 +38,8 @@ class _MainMapPageState extends State<MainMapPage> {
 
   String? userImageUrl;
   String? userName;
+
+  (int, List<Medal>)? medalInfo;
 
   final mapsInfoTypes = [
     'Ayuda',
@@ -68,19 +72,42 @@ class _MainMapPageState extends State<MainMapPage> {
       appBar: AppBar(
         centerTitle: true,
         title: const Text('MagiQ'),
-        leading: IconButton(
-          onPressed: handleLogin,
-          icon: (userImageUrl != null)
-              ? ClipRRect(
-                  borderRadius: BorderRadius.circular(24),
-                  child: Image.network(
-                    userImageUrl!,
-                    width: 40, // Set a consistent width
-                    height: 40, // Set a consistent height
-                    fit: BoxFit.cover, // Ensure the image fits well
+        leading: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (userImageUrl != null) ...[
+              const SizedBox(width: 4),
+              Stack(
+                alignment: Alignment.topRight,
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(24),
+                    child: Image.network(
+                      userImageUrl!,
+                      width: 40,
+                      height: 40,
+                      fit: BoxFit.contain,
+                    ),
                   ),
-                )
-              : const Icon(Icons.person),
+                  if (medalInfo?.$1 != null)
+                    Container(
+                      decoration: const BoxDecoration(
+                          color: Colors.red, shape: BoxShape.circle),
+                      padding: const EdgeInsets.all(1),
+                      child: Text(
+                        '${medalInfo!.$1}',
+                        style:
+                            const TextStyle(color: Colors.white, fontSize: 14),
+                      ),
+                    )
+                ],
+              )
+            ] else
+              IconButton(
+                onPressed: handleLogin,
+                icon: const Icon(Icons.person),
+              ),
+          ],
         ),
         actions: [
           PopupMenuButton<String>(
@@ -196,6 +223,9 @@ class _MainMapPageState extends State<MainMapPage> {
     final userId = await AuthService().auth(user) ?? -1;
     MainMapPage.userId = userId;
 
+    setState(() {});
+
+    medalInfo = await MedalService.get(userId);
     setState(() {});
   }
 
