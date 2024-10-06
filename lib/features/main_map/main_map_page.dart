@@ -33,7 +33,7 @@ class MainMapPage extends StatefulWidget {
 
 class _MainMapPageState extends State<MainMapPage> {
   var initialLocation = const LatLng(14.613303, -90.535587);
-  late GoogleMapController _controller;
+  GoogleMapController? _controller;
   final Set<Marker> _markers = {};
   String? selectedMapInfo;
 
@@ -60,6 +60,8 @@ class _MainMapPageState extends State<MainMapPage> {
       // Request permission and get the current position
       final position = await AppLocationUtils.determinePosition();
       initialLocation = LatLng(position.latitude, position.longitude);
+
+      _controller?.animateCamera(CameraUpdate.newLatLng(initialLocation));
       setState(() {});
     } catch (e) {
       // If there's an error, fallback to the default initialLocation
@@ -140,7 +142,6 @@ class _MainMapPageState extends State<MainMapPage> {
             ),
             onMapCreated: (GoogleMapController controller) {
               _controller = controller;
-              _controller.moveCamera(CameraUpdate.newLatLng(initialLocation));
             },
             markers: _markers,
             myLocationEnabled: true,
