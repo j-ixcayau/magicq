@@ -6,7 +6,9 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 
 import 'package:magiq/model/category.dart';
+import 'package:magiq/model/point.dart';
 import 'package:magiq/utils/http/category.dart';
+import 'package:magiq/utils/http/point.dart';
 import 'package:magiq/utils/upload_image.dart';
 
 class CreateNewPage extends StatefulWidget {
@@ -187,6 +189,8 @@ class _CreateNewPageState extends State<CreateNewPage> {
 
   void _init() async {
     categories = await CategoryService.get();
+
+    setState(() {});
   }
 
   void _showImageSourceSelection() {
@@ -238,6 +242,15 @@ class _CreateNewPageState extends State<CreateNewPage> {
   }
 
   void onAddMarker() async {
+    if (titleController.text.isEmpty ||
+        descriptionController.text.isEmpty ||
+        selectedType == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Todos los campos son obligatorios')),
+      );
+      return;
+    }
+
     if (photos.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('No hay imagenes para agregar')),
@@ -249,11 +262,24 @@ class _CreateNewPageState extends State<CreateNewPage> {
       isLoading = true;
       setState(() {});
 
-      final uploadedImageUrls = await UploadImage.uploadImages(photos);
+      final point = Point(
+        id: 0,
+        title: titleController.text,
+        description: descriptionController.text,
+        location: widget.position,
+        categoryId: selectedType!.id,
+        status: 'Activo',
+        link: '',
+        userId: 1,
+      );
+
+      final result = await PointService.create(point);
+
+      /* final uploadedImageUrls = await UploadImage.uploadImages(photos);
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Images uploaded successfully')),
-      );
+      ); */
 
       Navigator.pop(context);
     } catch (e) {

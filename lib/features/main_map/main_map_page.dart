@@ -158,7 +158,7 @@ class _MainMapPageState extends State<MainMapPage> {
       id: 0,
       username: fbUser.displayName ?? '',
       email: fbUser.email!,
-      password: 'p)Aq9T{j/]m;5ur`NBgPt7',
+      password: r'Abcd123$',
       isVerified: false,
       createdAt: DateTime.now(),
     );

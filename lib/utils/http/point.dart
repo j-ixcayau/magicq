@@ -32,4 +32,26 @@ class PointService {
 
     return [];
   }
+
+  static Future<bool> create(Point point) async {
+    try {
+      final response = await Dio().post(
+        '${AuthService.baseUrl}/points',
+        data: point.toJson(),
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer ${AuthService.token}',
+          },
+        ),
+      );
+
+      if (response.statusCode == 201) {
+        return true;
+      }
+    } catch (e) {
+      log(e.toString());
+    }
+
+    return false;
+  }
 }
