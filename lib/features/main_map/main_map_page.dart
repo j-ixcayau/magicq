@@ -73,7 +73,12 @@ class _MainMapPageState extends State<MainMapPage> {
           icon: (userImageUrl != null)
               ? ClipRRect(
                   borderRadius: BorderRadius.circular(24),
-                  child: Image.network(userImageUrl!),
+                  child: Image.network(
+                    userImageUrl!,
+                    width: 40, // Set a consistent width
+                    height: 40, // Set a consistent height
+                    fit: BoxFit.cover, // Ensure the image fits well
+                  ),
                 )
               : const Icon(Icons.person),
         ),
@@ -104,7 +109,6 @@ class _MainMapPageState extends State<MainMapPage> {
             ),
             onMapCreated: (GoogleMapController controller) {
               _controller = controller;
-
               _controller.moveCamera(CameraUpdate.newLatLng(initialLocation));
             },
             markers: _markers,
@@ -115,17 +119,39 @@ class _MainMapPageState extends State<MainMapPage> {
             alignment: Alignment.bottomCenter,
             child: Container(
               margin: const EdgeInsets.fromLTRB(8, 8, 8, 16),
+              padding: const EdgeInsets.all(16), // Add padding
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Colors.black26,
+                    blurRadius: 8,
+                    offset: Offset(0, 4),
+                  ),
+                ],
+              ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   ElevatedButton.icon(
                     onPressed: navigateToCuriosityInfo,
                     label: const Text('Curiosidades de mi ubicación'),
+                    icon: const Icon(Icons.info), // Added icon
+                    style: ElevatedButton.styleFrom(
+                      minimumSize:
+                          const Size(double.infinity, 48), // Full width
+                    ),
                   ),
                   const SizedBox(height: 8),
                   ElevatedButton.icon(
                     onPressed: navigateToAddEvent,
-                    label: const Text('Agregar evento'),
+                    label: const Text('Agregar aviso'),
+                    icon: const Icon(Icons.add), // Added icon
+                    style: ElevatedButton.styleFrom(
+                      minimumSize:
+                          const Size(double.infinity, 48), // Full width
+                    ),
                   ),
                 ],
               ),
