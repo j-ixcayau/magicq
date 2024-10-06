@@ -7,7 +7,7 @@ import 'package:magiq/model/user.dart';
 class AuthService {
   final Dio _dio = Dio();
 
-  static const baseUrl = 'http://localhost:3000';
+  static const baseUrl = 'http://35.245.198.235:3000';
 
   static String token = '';
 
