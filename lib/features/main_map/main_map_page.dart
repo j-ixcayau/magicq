@@ -1,16 +1,31 @@
-import 'package:flutter/foundation.dart';
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:geolocator/geolocator.dart';
+import 'package:firebase_auth/firebase_auth.dart' hide User;
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 
 import 'package:magiq/features/create_new/create_new_page.dart';
-import 'package:magiq/utils/hospitals.dart';
+import 'package:magiq/features/curiosity/curiosity_page.dart';
+import 'package:magiq/features/main_map/map_point_dialog.dart';
+import 'package:magiq/features/medal/medal_page.dart';
+import 'package:magiq/features/point/point_screen.dart';
+import 'package:magiq/model/marker.dart' as marker;
+import 'package:magiq/model/medal.dart';
+import 'package:magiq/model/point.dart';
+import 'package:magiq/model/user.dart';
+import 'package:magiq/utils/auth_utils.dart';
+import 'package:magiq/utils/http/auth.dart';
+import 'package:magiq/utils/http/climate.dart';
+import 'package:magiq/utils/http/marker.dart';
+import 'package:magiq/utils/http/medal.dart';
+import 'package:magiq/utils/http/point.dart';
+import 'package:magiq/utils/location.dart';
 
 class MainMapPage extends StatefulWidget {
   const MainMapPage({super.key});
+
+  static int userId = -1;
 
   @override
   State<MainMapPage> createState() => _MainMapPageState();
@@ -22,15 +37,14 @@ class _MainMapPageState extends State<MainMapPage> {
   final Set<Marker> _markers = {};
   String? selectedMapInfo;
 
-  String? currentUser;
+  String? userImageUrl;
+  String? userName;
+
+  (int, List<Medal>)? medalInfo;
 
   final mapsInfoTypes = [
-    /* 'Policía',
-    'Bomberos', */
-    'Hospitales',
-    'Noticias',
-    /* 
-    'Todo', */
+    'Ayuda',
+    'Avisos',
   ];
 
   @override
@@ -44,7 +58,7 @@ class _MainMapPageState extends State<MainMapPage> {
   Future<void> _setInitialLocation() async {
     try {
       // Request permission and get the current position
-      Position position = await _determinePosition();
+      final position = await AppLocationUtils.determinePosition();
       initialLocation = LatLng(position.latitude, position.longitude);
       setState(() {});
     } catch (e) {
@@ -53,47 +67,51 @@ class _MainMapPageState extends State<MainMapPage> {
     }
   }
 
-  Future<Position> _determinePosition() async {
-    bool serviceEnabled;
-    LocationPermission permission;
-
-    // Check if location services are enabled
-    serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) {
-      throw Exception('Location services are disabled.');
-    }
-
-    // Check for location permissions
-    permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) {
-        throw Exception('Location permissions are denied');
-      }
-    }
-
-    if (permission == LocationPermission.deniedForever) {
-      throw Exception('Location permissions are permanently denied.');
-    }
-
-    // Get the current position
-    return await Geolocator.getCurrentPosition();
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
         title: const Text('MagiQ'),
-        leading: IconButton(
-          onPressed: handleLogin,
-          icon: (currentUser != null)
-              ? ClipRRect(
-                  borderRadius: BorderRadius.circular(24),
-                  child: Image.network(currentUser!),
-                )
-              : const Icon(Icons.person),
+        leading: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (userImageUrl != null) ...[
+              const SizedBox(width: 4),
+              GestureDetector(
+                onTap: onMedalTap,
+                child: Stack(
+                  alignment: Alignment.topRight,
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(24),
+                      child: Image.network(
+                        userImageUrl!,
+                        width: 40,
+                        height: 40,
+                        fit: BoxFit.contain,
+                      ),
+                    ),
+                    if (medalInfo?.$1 != null)
+                      Container(
+                        decoration: const BoxDecoration(
+                            color: Colors.red, shape: BoxShape.circle),
+                        padding: const EdgeInsets.all(1),
+                        child: Text(
+                          '${medalInfo!.$1}',
+                          style: const TextStyle(
+                              color: Colors.white, fontSize: 14),
+                        ),
+                      )
+                  ],
+                ),
+              )
+            ] else
+              IconButton(
+                onPressed: handleLogin,
+                icon: const Icon(Icons.person),
+              ),
+          ],
         ),
         actions: [
           PopupMenuButton<String>(
@@ -122,7 +140,6 @@ class _MainMapPageState extends State<MainMapPage> {
             ),
             onMapCreated: (GoogleMapController controller) {
               _controller = controller;
-
               _controller.moveCamera(CameraUpdate.newLatLng(initialLocation));
             },
             markers: _markers,
@@ -133,9 +150,41 @@ class _MainMapPageState extends State<MainMapPage> {
             alignment: Alignment.bottomCenter,
             child: Container(
               margin: const EdgeInsets.fromLTRB(8, 8, 8, 16),
-              child: ElevatedButton.icon(
-                onPressed: navigateToAddEvent,
-                label: const Text('Agregar evento'),
+              padding: const EdgeInsets.all(16), // Add padding
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Colors.black26,
+                    blurRadius: 8,
+                    offset: Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ElevatedButton.icon(
+                    onPressed: navigateToCuriosityInfo,
+                    label: const Text('Curiosidades de mi ubicación'),
+                    icon: const Icon(Icons.info), // Added icon
+                    style: ElevatedButton.styleFrom(
+                      minimumSize:
+                          const Size(double.infinity, 48), // Full width
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  ElevatedButton.icon(
+                    onPressed: navigateToAddEvent,
+                    label: const Text('Agregar aviso'),
+                    icon: const Icon(Icons.add), // Added icon
+                    style: ElevatedButton.styleFrom(
+                      minimumSize:
+                          const Size(double.infinity, 48), // Full width
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -144,70 +193,76 @@ class _MainMapPageState extends State<MainMapPage> {
     );
   }
 
-  void getUser() {
-    if (FirebaseAuth.instance.currentUser == null) {
-      return;
-    }
-
-    currentUser = FirebaseAuth.instance.currentUser!.photoURL;
-    setState(() {});
-  }
-
   void handleLogin() async {
     if (FirebaseAuth.instance.currentUser != null) {
       return;
     }
-
     try {
-      UserCredential userCredential;
-
-      if (kIsWeb) {
-        // Web login flow
-        GoogleAuthProvider googleProvider = GoogleAuthProvider();
-
-        userCredential =
-            await FirebaseAuth.instance.signInWithPopup(googleProvider);
-      } else {
-        // Android login flow
-        final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
-        if (googleUser == null) {
-          // The user canceled the sign-in
-          return;
-        }
-
-        final GoogleSignInAuthentication googleAuth =
-            await googleUser.authentication;
-        final AuthCredential credential = GoogleAuthProvider.credential(
-          accessToken: googleAuth.accessToken,
-          idToken: googleAuth.idToken,
-        );
-
-        // Authenticate with Firebase
-        userCredential =
-            await FirebaseAuth.instance.signInWithCredential(credential);
-      }
+      await AuthUtils.auth();
 
       getUser();
-
-      print('Successfully logged in: ${userCredential.user?.displayName}');
     } catch (e) {
-      print('Error during Google sign-in: $e');
+      log('Error during Google sign-in: $e');
     }
   }
 
-  void onInfoMapTap(String value) {
+  void getUser() async {
+    final fbUser = FirebaseAuth.instance.currentUser;
+    if (fbUser == null) {
+      return;
+    }
+
+    final user = User(
+      id: 0,
+      username: fbUser.displayName ?? '',
+      email: fbUser.email!,
+      password: r'Abcd123$',
+      isVerified: false,
+      createdAt: DateTime.now(),
+    );
+
+    userImageUrl = fbUser.photoURL;
+    userName = fbUser.displayName;
+
+    final userId = await AuthService().auth(user) ?? -1;
+    MainMapPage.userId = userId;
+
+    setState(() {});
+
+    medalInfo = await MedalService.get(userId);
+    setState(() {});
+  }
+
+  void onInfoMapTap(String value) async {
     _markers.clear();
 
     selectedMapInfo = value;
 
-    if (value == 'Hospitales') {
-      for (var it in HospitalsInfo().build()) {
+    if (value == 'Ayuda') {
+      final markers = await MarkerService.get();
+
+      for (var it in markers) {
         final marker = Marker(
           markerId: MarkerId(it.hashCode.toString()),
-          position: it.coordinates.parse,
+          position: it.location,
           infoWindow: InfoWindow(
-            title: it.name,
+            title: it.address,
           ),
+          onTap: () => onMarkerTap(it),
+        );
+        _markers.add(marker);
+      }
+    } else if (value == 'Avisos') {
+      final points = await PointService.get();
+
+      for (var it in points) {
+        final marker = Marker(
+          markerId: MarkerId(it.hashCode.toString()),
+          position: it.location,
+          infoWindow: InfoWindow(
+            title: it.title,
+          ),
+          onTap: () => onPointTap(it),
         );
 
         _markers.add(marker);
@@ -217,8 +272,23 @@ class _MainMapPageState extends State<MainMapPage> {
     setState(() {});
   }
 
-  void navigateToAddEvent() {
+  void onPointTap(Point point) {
     Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => PhotoViewerScreen(
+          point: point,
+        ),
+      ),
+    );
+  }
+
+  void onMarkerTap(marker.Marker marker) {
+    showCustomDialog(context, marker.address, null);
+  }
+
+  void navigateToAddEvent() async {
+    await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => CreateNewPage(
@@ -226,18 +296,52 @@ class _MainMapPageState extends State<MainMapPage> {
         ),
       ),
     );
+
+    getUser();
   }
 
-  void _addMarker(LatLng position, String name) {
-    final marker = Marker(
-      markerId: MarkerId(position.toString()),
-      position: position,
-      infoWindow: InfoWindow(
-        title: name,
+  void navigateToCuriosityInfo() async {
+    final info = await ClimateService.get(initialLocation, userName ?? 'MagiQ');
+
+    if (info == null) {
+      return;
+    }
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => CuriosityPage(
+          info: info,
+        ),
       ),
     );
+  }
 
-    _markers.add(marker);
-    setState(() {});
+  void onMedalTap() {
+    final medals = medalInfo?.$2 ?? [];
+
+    if (medals.isEmpty) return;
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => MedalListScreen(
+          puntos: medalInfo?.$1 ?? 0,
+          medals: getUniqueMedals(medals),
+        ),
+      ),
+    );
+  }
+
+  List<Medal> getUniqueMedals(List<Medal> medals) {
+    final seenPoints = <int>{};
+    return medals.where((medal) {
+      // Check if the requiredPoints has been seen before
+      if (seenPoints.contains(medal.requiredPoints)) {
+        return false; // Exclude this medal
+      }
+      seenPoints.add(medal.requiredPoints);
+      return true; // Include this medal
+    }).toList();
   }
 }

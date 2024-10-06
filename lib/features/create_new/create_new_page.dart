@@ -5,6 +5,13 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 
+import 'package:magiq/features/main_map/main_map_page.dart';
+import 'package:magiq/model/category.dart';
+import 'package:magiq/model/photo.dart';
+import 'package:magiq/model/point.dart';
+import 'package:magiq/utils/http/category.dart';
+import 'package:magiq/utils/http/photo.dart';
+import 'package:magiq/utils/http/point.dart';
 import 'package:magiq/utils/upload_image.dart';
 
 class CreateNewPage extends StatefulWidget {
@@ -20,7 +27,6 @@ class CreateNewPage extends StatefulWidget {
 }
 
 class _CreateNewPageState extends State<CreateNewPage> {
-  String? selectedType;
   final TextEditingController titleController = TextEditingController();
   final TextEditingController descriptionController = TextEditingController();
   List<(XFile, Uint8List)> photos = []; // Store multiple selected photos
@@ -28,6 +34,16 @@ class _CreateNewPageState extends State<CreateNewPage> {
   final ImagePicker _picker = ImagePicker();
 
   bool isLoading = false;
+
+  Category? selectedType;
+  List<Category> categories = [];
+
+  @override
+  void initState() {
+    super.initState();
+
+    Future.delayed(Duration.zero, _init);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -69,33 +85,27 @@ class _CreateNewPageState extends State<CreateNewPage> {
                     borderRadius: BorderRadius.circular(4.0),
                   ),
                   child: DropdownButtonHideUnderline(
-                    child: DropdownButton<String>(
+                    child: DropdownButton<Category>(
                       hint: const Padding(
                         padding: EdgeInsets.symmetric(horizontal: 8.0),
                         child: Text('Selecciona la categoría'),
                       ),
                       value: selectedType,
-                      items: [
-                        'Anuncio a la comunidad',
-                        'Reporte ambiental',
-                        'Violencia',
-                        'Emergencias nacionales',
-                        'Obras públicas',
-                        'Anuncios de Canales',
-                      ].map((String type) {
-                        return DropdownMenuItem<String>(
-                          value: type,
-                          child: Padding(
-                            padding:
-                                const EdgeInsets.symmetric(horizontal: 8.0),
-                            child: Text(type),
-                          ),
-                        );
-                      }).toList(),
-                      onChanged: (String? newValue) {
-                        setState(() {
-                          selectedType = newValue;
-                        });
+                      items: categories.map(
+                        (category) {
+                          return DropdownMenuItem(
+                            value: category,
+                            child: Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 8.0),
+                              child: Text(category.name),
+                            ),
+                          );
+                        },
+                      ).toList(),
+                      onChanged: (newValue) {
+                        selectedType = newValue;
+                        setState(() {});
                       },
                       isExpanded: true,
                     ),
@@ -180,6 +190,12 @@ class _CreateNewPageState extends State<CreateNewPage> {
     );
   }
 
+  void _init() async {
+    categories = await CategoryService.get();
+
+    setState(() {});
+  }
+
   void _showImageSourceSelection() {
     showModalBottomSheet(
       context: context,
@@ -229,6 +245,15 @@ class _CreateNewPageState extends State<CreateNewPage> {
   }
 
   void onAddMarker() async {
+    if (titleController.text.isEmpty ||
+        descriptionController.text.isEmpty ||
+        selectedType == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Todos los campos son obligatorios')),
+      );
+      return;
+    }
+
     if (photos.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('No hay imagenes para agregar')),
@@ -240,13 +265,43 @@ class _CreateNewPageState extends State<CreateNewPage> {
       isLoading = true;
       setState(() {});
 
+      final point = Point(
+          id: 0,
+          title: titleController.text,
+          description: descriptionController.text,
+          location: widget.position,
+          categoryId: selectedType!.id,
+          status: 'Activo',
+          link: '',
+          userId: MainMapPage.userId,
+          photos: []);
+
+      final result = await PointService.create(point);
+
+      if (result == null) {
+        resetStatus();
+        return;
+      }
+      point.id = result;
+
       final uploadedImageUrls = await UploadImage.uploadImages(photos);
+
+      for (var it in uploadedImageUrls) {
+        final photo = Photo(
+          id: 0,
+          url: it,
+          pointId: point.id,
+          markerId: null,
+        );
+
+        await PhotoService.create(photo);
+      }
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Images uploaded successfully')),
       );
 
-      Navigator.pop(context);
+      Navigator.pop(context, true);
     } catch (e) {
       print('Error uploading images: $e');
 
@@ -254,8 +309,12 @@ class _CreateNewPageState extends State<CreateNewPage> {
         const SnackBar(content: Text('Failed to upload images')),
       );
     } finally {
-      isLoading = false;
-      setState(() {});
+      resetStatus();
     }
+  }
+
+  void resetStatus() {
+    isLoading = false;
+    setState(() {});
   }
 }

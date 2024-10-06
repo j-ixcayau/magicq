@@ -1,14 +1,14 @@
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+
 import 'package:magiq/model/photo.dart';
-import 'package:magiq/model/user.dart';
 
 class Marker {
   final int id;
-  final String phoneNumber; // Changed to camelCase
-  final String location;
+  final String? phoneNumber;
+  final LatLng location;
   final String address;
-  final String link;
-  final DateTime createdAt; // Changed to DateTime for Dart
-  final User user;
+  final String? link;
+  final String? userId;
   final List<Photo> photos;
 
   Marker({
@@ -17,8 +17,7 @@ class Marker {
     required this.location,
     required this.address,
     required this.link,
-    required this.createdAt,
-    required this.user,
+    required this.userId,
     required this.photos,
   });
 
@@ -26,33 +25,30 @@ class Marker {
   factory Marker.fromJson(Map<String, dynamic> json) {
     return Marker(
       id: json['id'] as int,
-      phoneNumber: json['phone_number'] as String,
-      location: json['location'] as String,
+      phoneNumber: json['phone_number'] as String?,
+      location: LatLng(
+        json['lat'],
+        json['long'],
+      ),
       address: json['address'] as String,
-      link: json['link'] as String,
-      createdAt:
-          DateTime.parse(json['created_at'] as String), // Parse the date string
-      user: User.fromJson(json['user']
-          as Map<String, dynamic>), // Assuming User class has fromJson method
+      link: json['link'] as String?,
+      userId: json['userId'] as String?,
       photos: (json['photos'] as List<dynamic>)
           .map((photo) => Photo.fromJson(photo as Map<String, dynamic>))
           .toList(), // Assuming Photo class has fromJson method
     );
   }
 
-  // Custom toJson method
   Map<String, dynamic> toJson() {
     return {
       'id': id,
       'phone_number': phoneNumber,
-      'location': location,
+      'lat': location.latitude,
+      'long': location.longitude,
       'address': address,
       'link': link,
-      'created_at': createdAt.toIso8601String(), // Convert DateTime to string
-      'user': user.toJson(), // Assuming User class has toJson method
-      'photos': photos
-          .map((photo) => photo.toJson())
-          .toList(), // Assuming Photo class has toJson method
+      'userId': userId,
+      'photos': photos.map((photo) => photo.toJson()).toList(),
     };
   }
 }
