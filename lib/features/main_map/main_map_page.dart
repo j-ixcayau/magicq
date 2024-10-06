@@ -3,18 +3,18 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 
 import 'package:firebase_auth/firebase_auth.dart' hide User;
-import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import 'package:magiq/features/create_new/create_new_page.dart';
+import 'package:magiq/features/curiosity/curiosity_page.dart';
 import 'package:magiq/model/point.dart';
 import 'package:magiq/model/user.dart';
 import 'package:magiq/utils/auth_utils.dart';
 import 'package:magiq/utils/hospitals.dart';
 import 'package:magiq/utils/http/auth.dart';
+import 'package:magiq/utils/http/climate.dart';
 import 'package:magiq/utils/http/point.dart';
 import 'package:magiq/utils/location.dart';
-import 'package:magiq/utils/service_location.dart';
 
 class MainMapPage extends StatefulWidget {
   const MainMapPage({super.key});
@@ -29,7 +29,8 @@ class _MainMapPageState extends State<MainMapPage> {
   final Set<Marker> _markers = {};
   String? selectedMapInfo;
 
-  String? currentUser;
+  String? userImageUrl;
+  String? userName;
 
   final mapsInfoTypes = [
     /* 'Policía',
@@ -68,10 +69,10 @@ class _MainMapPageState extends State<MainMapPage> {
         title: const Text('MagiQ'),
         leading: IconButton(
           onPressed: handleLogin,
-          icon: (currentUser != null)
+          icon: (userImageUrl != null)
               ? ClipRRect(
                   borderRadius: BorderRadius.circular(24),
-                  child: Image.network(currentUser!),
+                  child: Image.network(userImageUrl!),
                 )
               : const Icon(Icons.person),
         ),
@@ -113,9 +114,19 @@ class _MainMapPageState extends State<MainMapPage> {
             alignment: Alignment.bottomCenter,
             child: Container(
               margin: const EdgeInsets.fromLTRB(8, 8, 8, 16),
-              child: ElevatedButton.icon(
-                onPressed: navigateToAddEvent,
-                label: const Text('Agregar evento'),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ElevatedButton.icon(
+                    onPressed: navigateToCuriosityInfo,
+                    label: const Text('Curiosidades de mi ubicación'),
+                  ),
+                  const SizedBox(height: 8),
+                  ElevatedButton.icon(
+                    onPressed: navigateToAddEvent,
+                    label: const Text('Agregar evento'),
+                  ),
+                ],
               ),
             ),
           ),
@@ -129,7 +140,7 @@ class _MainMapPageState extends State<MainMapPage> {
       return;
     }
     try {
-      AuthUtils.auth();
+      await AuthUtils.auth();
 
       getUser();
     } catch (e) {
@@ -152,7 +163,8 @@ class _MainMapPageState extends State<MainMapPage> {
       createdAt: DateTime.now(),
     );
 
-    currentUser = fbUser.photoURL;
+    userImageUrl = fbUser.photoURL;
+    userName = fbUser.displayName;
 
     final result = await AuthService().auth(user);
 
@@ -206,6 +218,23 @@ class _MainMapPageState extends State<MainMapPage> {
       MaterialPageRoute(
         builder: (context) => CreateNewPage(
           position: initialLocation,
+        ),
+      ),
+    );
+  }
+
+  void navigateToCuriosityInfo() async {
+    final info = await ClimateService.get(initialLocation, userName ?? 'MagiQ');
+
+    if (info == null) {
+      return;
+    }
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => CuriosityPage(
+          info: info,
         ),
       ),
     );
