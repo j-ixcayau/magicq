@@ -22,6 +22,14 @@
           }
         },
         {
+          "client_id": "848436920318-upp88n2lk2p99ei104brntud2rfekgft.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.magiq.magiq",
+            "certificate_hash": "294aa1b174a1ebf741bec0f35029efdc6c9220eb"
+          }
+        },
+        {
           "client_id": "848436920318-aj645o8b250nrukb9gmerkbnm20jaa6v.apps.googleusercontent.com",
           "client_type": 3
         }

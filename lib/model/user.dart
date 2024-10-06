@@ -32,7 +32,6 @@ class User {
       'email': email,
       'password': password,
       'is_verified': isVerified,
-      'created_at': createdAt.toIso8601String(),
     };
   }
 
