@@ -266,15 +266,15 @@ class _CreateNewPageState extends State<CreateNewPage> {
       setState(() {});
 
       final point = Point(
-        id: 0,
-        title: titleController.text,
-        description: descriptionController.text,
-        location: widget.position,
-        categoryId: selectedType!.id,
-        status: 'Activo',
-        link: '',
-        userId: MainMapPage.userId,
-      );
+          id: 0,
+          title: titleController.text,
+          description: descriptionController.text,
+          location: widget.position,
+          categoryId: selectedType!.id,
+          status: 'Activo',
+          link: '',
+          userId: MainMapPage.userId,
+          photos: []);
 
       final result = await PointService.create(point);
 

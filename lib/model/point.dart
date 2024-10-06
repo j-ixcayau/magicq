@@ -1,5 +1,7 @@
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
+import 'package:magiq/model/photo.dart';
+
 class Point {
   int id;
   final String title;
@@ -9,6 +11,7 @@ class Point {
   final String status;
   final String link;
   final int userId;
+  final List<Photo> photos;
 
   Point({
     required this.id,
@@ -19,6 +22,7 @@ class Point {
     required this.status,
     required this.link,
     required this.userId,
+    required this.photos,
   });
 
   // Custom fromJson method
@@ -32,10 +36,14 @@ class Point {
         json['long'],
       ),
       categoryId: -1,
-      /* categoryId: json['categoryId'] as int, */
       status: json['status'] as String,
       link: json['link'] as String,
       userId: json['user']['id'] as int,
+      photos: List.from(json['photos'])
+          .map(
+            (it) => Photo.fromJson(it),
+          )
+          .toList(),
     );
   }
 

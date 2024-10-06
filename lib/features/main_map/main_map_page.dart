@@ -7,6 +7,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import 'package:magiq/features/create_new/create_new_page.dart';
 import 'package:magiq/features/curiosity/curiosity_page.dart';
+import 'package:magiq/features/main_map/map_point_dialog.dart';
 import 'package:magiq/model/point.dart';
 import 'package:magiq/model/user.dart';
 import 'package:magiq/utils/auth_utils.dart';
@@ -211,7 +212,9 @@ class _MainMapPageState extends State<MainMapPage> {
     setState(() {});
   }
 
-  void onPointTap(Point point) {}
+  void onPointTap(Point point) {
+    showCustomDialog(context, point.title, point.description, point.photos);
+  }
 
   void navigateToAddEvent() {
     Navigator.push(

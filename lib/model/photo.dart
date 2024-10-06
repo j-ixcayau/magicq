@@ -16,8 +16,8 @@ class Photo {
     return Photo(
       id: json['id'] as int,
       url: json['url'] as String,
-      pointId: json['pointId'] as int,
-      markerId: json['markerId'] as int,
+      pointId: null,
+      markerId: null,
     );
   }
 
