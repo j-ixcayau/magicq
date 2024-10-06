@@ -38,12 +38,8 @@ class _MainMapPageState extends State<MainMapPage> {
   String? userName;
 
   final mapsInfoTypes = [
-    /* 'Policía',
-    'Bomberos', */
-    'Hospitales',
+    'Ayuda',
     'Avisos',
-    /* 
-    'Todo', */
   ];
 
   @override
@@ -182,7 +178,7 @@ class _MainMapPageState extends State<MainMapPage> {
 
     selectedMapInfo = value;
 
-    if (value == 'Hospitales') {
+    if (value == 'Ayuda') {
       final markers = await MarkerService.get();
 
       for (var it in markers) {

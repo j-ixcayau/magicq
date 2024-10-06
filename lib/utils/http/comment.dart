@@ -9,7 +9,7 @@ class CommentService {
   static Future<List<Comment>> get(int pointId) async {
     try {
       final response = await Dio().get(
-        '${AuthService.baseUrl}/comments',
+        '${AuthService.baseUrl}/comments/point/$pointId',
         options: Options(
           headers: {
             'Authorization': 'Bearer ${AuthService.token}',
