@@ -8,12 +8,13 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:magiq/features/create_new/create_new_page.dart';
 import 'package:magiq/features/curiosity/curiosity_page.dart';
 import 'package:magiq/features/main_map/map_point_dialog.dart';
+import 'package:magiq/model/marker.dart' as marker;
 import 'package:magiq/model/point.dart';
 import 'package:magiq/model/user.dart';
 import 'package:magiq/utils/auth_utils.dart';
-import 'package:magiq/utils/hospitals.dart';
 import 'package:magiq/utils/http/auth.dart';
 import 'package:magiq/utils/http/climate.dart';
+import 'package:magiq/utils/http/marker.dart';
 import 'package:magiq/utils/http/point.dart';
 import 'package:magiq/utils/location.dart';
 
@@ -181,15 +182,17 @@ class _MainMapPageState extends State<MainMapPage> {
     selectedMapInfo = value;
 
     if (value == 'Hospitales') {
-      for (var it in HospitalsInfo().build()) {
+      final markers = await MarkerService.get();
+
+      for (var it in markers) {
         final marker = Marker(
           markerId: MarkerId(it.hashCode.toString()),
-          position: it.coordinates.parse,
+          position: it.location,
           infoWindow: InfoWindow(
-            title: it.name,
+            title: it.address,
           ),
+          onTap: () => onMarkerTap(it),
         );
-
         _markers.add(marker);
       }
     } else if (value == 'Avisos') {
@@ -214,6 +217,10 @@ class _MainMapPageState extends State<MainMapPage> {
 
   void onPointTap(Point point) {
     showCustomDialog(context, point.title, point.description, point.photos);
+  }
+
+  void onMarkerTap(marker.Marker marker) {
+    showCustomDialog(context, marker.address, null, marker.photos);
   }
 
   void navigateToAddEvent() {

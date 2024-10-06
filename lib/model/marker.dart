@@ -1,12 +1,13 @@
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+
 import 'package:magiq/model/photo.dart';
 
 class Marker {
   final int id;
-  final String phoneNumber; // Changed to camelCase
-  final String location;
+  final String phoneNumber;
+  final LatLng location;
   final String address;
   final String link;
-  final DateTime createdAt; // Changed to DateTime for Dart
   final String userId;
   final List<Photo> photos;
 
@@ -16,7 +17,6 @@ class Marker {
     required this.location,
     required this.address,
     required this.link,
-    required this.createdAt,
     required this.userId,
     required this.photos,
   });
@@ -26,11 +26,12 @@ class Marker {
     return Marker(
       id: json['id'] as int,
       phoneNumber: json['phone_number'] as String,
-      location: json['location'] as String,
+      location: LatLng(
+        json['lat'],
+        json['long'],
+      ),
       address: json['address'] as String,
       link: json['link'] as String,
-      createdAt:
-          DateTime.parse(json['created_at'] as String), // Parse the date string
       userId: json['userId'] as String,
       photos: (json['photos'] as List<dynamic>)
           .map((photo) => Photo.fromJson(photo as Map<String, dynamic>))
@@ -38,19 +39,16 @@ class Marker {
     );
   }
 
-  // Custom toJson method
   Map<String, dynamic> toJson() {
     return {
       'id': id,
       'phone_number': phoneNumber,
-      'location': location,
+      'lat': location.latitude,
+      'long': location.longitude,
       'address': address,
       'link': link,
-      'created_at': createdAt.toIso8601String(), // Convert DateTime to string
       'userId': userId,
-      'photos': photos
-          .map((photo) => photo.toJson())
-          .toList(), // Assuming Photo class has toJson method
+      'photos': photos.map((photo) => photo.toJson()).toList(),
     };
   }
 }

@@ -7,7 +7,7 @@ import 'package:magiq/model/photo.dart';
 void showCustomDialog(
   BuildContext context,
   String title,
-  String description,
+  String? description,
   List<Photo> imageUrls,
 ) {
   showDialog(
@@ -19,8 +19,11 @@ void showCustomDialog(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(description),
-              const SizedBox(height: 16.0),
+              if (description != null) ...[
+                Text(description),
+                const SizedBox(height: 8.0),
+              ],
+              const SizedBox(height: 8.0),
               const Text(
                 'Photos:',
                 style: TextStyle(fontWeight: FontWeight.bold),
