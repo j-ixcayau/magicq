@@ -19,6 +19,8 @@ import 'package:magiq/utils/location.dart';
 class MainMapPage extends StatefulWidget {
   const MainMapPage({super.key});
 
+  static int userId = -1;
+
   @override
   State<MainMapPage> createState() => _MainMapPageState();
 }
@@ -166,9 +168,8 @@ class _MainMapPageState extends State<MainMapPage> {
     userImageUrl = fbUser.photoURL;
     userName = fbUser.displayName;
 
-    final result = await AuthService().auth(user);
-
-    log(result.toString());
+    final userId = await AuthService().auth(user) ?? -1;
+    MainMapPage.userId = userId;
 
     setState(() {});
   }

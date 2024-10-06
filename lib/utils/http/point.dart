@@ -33,7 +33,7 @@ class PointService {
     return [];
   }
 
-  static Future<bool> create(Point point) async {
+  static Future<int?> create(Point point) async {
     try {
       final response = await Dio().post(
         '${AuthService.baseUrl}/points',
@@ -46,12 +46,12 @@ class PointService {
       );
 
       if (response.statusCode == 201) {
-        return true;
+        return response.data['id'] as int;
       }
     } catch (e) {
       log(e.toString());
     }
 
-    return false;
+    return null;
   }
 }

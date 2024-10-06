@@ -1,19 +1,14 @@
-import 'package:magiq/model/marker.dart';
-import 'package:magiq/model/point.dart';
-
 class Photo {
   final int id;
   final String url;
-  final DateTime uploadedAt; // Changed to DateTime for Dart
-  final Point point;
-  final Marker marker;
+  final int? pointId;
+  final int? markerId;
 
   Photo({
     required this.id,
     required this.url,
-    required this.uploadedAt,
-    required this.point,
-    required this.marker,
+    required this.pointId,
+    required this.markerId,
   });
 
   // Custom fromJson method
@@ -21,23 +16,17 @@ class Photo {
     return Photo(
       id: json['id'] as int,
       url: json['url'] as String,
-      uploadedAt: DateTime.parse(
-          json['uploaded_at'] as String), // Parse the date string
-      point: Point.fromJson(json['point']
-          as Map<String, dynamic>), // Assuming Point class has fromJson method
-      marker: Marker.fromJson(json['marker']
-          as Map<String, dynamic>), // Assuming Marker class has fromJson method
+      pointId: json['pointId'] as int,
+      markerId: json['markerId'] as int,
     );
   }
 
   // Custom toJson method
   Map<String, dynamic> toJson() {
     return {
-      'id': id,
       'url': url,
-      'uploaded_at': uploadedAt.toIso8601String(), // Convert DateTime to string
-      'point': point.toJson(), // Assuming Point class has toJson method
-      'marker': marker.toJson(), // Assuming Marker class has toJson method
+      'pointId': pointId,
+      'markerId': markerId,
     };
   }
 }

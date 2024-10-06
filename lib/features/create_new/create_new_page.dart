@@ -5,9 +5,12 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 
+import 'package:magiq/features/main_map/main_map_page.dart';
 import 'package:magiq/model/category.dart';
+import 'package:magiq/model/photo.dart';
 import 'package:magiq/model/point.dart';
 import 'package:magiq/utils/http/category.dart';
+import 'package:magiq/utils/http/photo.dart';
 import 'package:magiq/utils/http/point.dart';
 import 'package:magiq/utils/upload_image.dart';
 
@@ -270,18 +273,35 @@ class _CreateNewPageState extends State<CreateNewPage> {
         categoryId: selectedType!.id,
         status: 'Activo',
         link: '',
-        userId: 1,
+        userId: MainMapPage.userId,
       );
 
       final result = await PointService.create(point);
 
-      /* final uploadedImageUrls = await UploadImage.uploadImages(photos);
+      if (result == null) {
+        resetStatus();
+        return;
+      }
+      point.id = result;
+
+      final uploadedImageUrls = await UploadImage.uploadImages(photos);
+
+      for (var it in uploadedImageUrls) {
+        final photo = Photo(
+          id: 0,
+          url: it,
+          pointId: point.id,
+          markerId: null,
+        );
+
+        await PhotoService.create(photo);
+      }
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Images uploaded successfully')),
-      ); */
+      );
 
-      Navigator.pop(context);
+      Navigator.pop(context, true);
     } catch (e) {
       print('Error uploading images: $e');
 
@@ -289,8 +309,12 @@ class _CreateNewPageState extends State<CreateNewPage> {
         const SnackBar(content: Text('Failed to upload images')),
       );
     } finally {
-      isLoading = false;
-      setState(() {});
+      resetStatus();
     }
+  }
+
+  void resetStatus() {
+    isLoading = false;
+    setState(() {});
   }
 }

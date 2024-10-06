@@ -1,7 +1,7 @@
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class Point {
-  final int id;
+  int id;
   final String title;
   final String description;
   final LatLng location;
@@ -29,12 +29,13 @@ class Point {
       description: json['description'] as String,
       location: LatLng(
         json['lat'],
-        json['lng'],
+        json['long'],
       ),
-      categoryId: json['categoryId'] as int,
+      categoryId: -1,
+      /* categoryId: json['categoryId'] as int, */
       status: json['status'] as String,
       link: json['link'] as String,
-      userId: json['userId'] as int,
+      userId: json['user']['id'] as int,
     );
   }
 

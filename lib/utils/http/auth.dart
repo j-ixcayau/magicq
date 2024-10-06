@@ -11,7 +11,7 @@ class AuthService {
 
   static String token = '';
 
-  Future<bool> auth(User user) async {
+  Future<int?> auth(User user) async {
     try {
       return await _attemptLogin(user);
     } on DioException catch (e) {
@@ -23,30 +23,30 @@ class AuthService {
       }
     }
 
-    return false;
+    return null;
   }
 
-  Future<bool> _attemptLogin(User user) async {
-    final loginResponse = await _dio.post(
+  Future<int?> _attemptLogin(User user) async {
+    final response = await _dio.post(
       '$baseUrl/users/login',
       data: user.toAuthJson(),
     );
 
-    if (loginResponse.statusCode == 200) {
-      token = loginResponse.data['token'];
-      return true;
+    if (response.statusCode == 200) {
+      token = response.data['token'];
+      return response.data['userId'] as int;
     }
-    return false;
+    return null;
   }
 
-  Future<bool> _registerAndLogin(User user) async {
+  Future<int?> _registerAndLogin(User user) async {
     try {
-      final registerResponse = await _dio.post(
+      final response = await _dio.post(
         '$baseUrl/users',
         data: user.toRegisterJson(),
       );
 
-      if (registerResponse.statusCode == 201) {
+      if (response.statusCode == 201) {
         log('Registration successful: Attempting to log in again');
         return await _attemptLogin(user);
       }
@@ -54,7 +54,7 @@ class AuthService {
       log('Registration Error: ${e.message}');
     }
 
-    return false;
+    return null;
   }
 
   bool _isUnauthorized(DioException error) {
