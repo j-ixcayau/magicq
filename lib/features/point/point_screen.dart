@@ -54,42 +54,47 @@ class _PhotoViewerScreenState extends State<PhotoViewerScreen> {
             if (widget.point.photos.isEmpty)
               const Text('No images to display.')
             else
-              Expanded(
-                child: CarouselSlider(
-                  options: CarouselOptions(
-                    height: 200.0,
-                    enableInfiniteScroll: true,
-                    enlargeCenterPage: true,
-                    autoPlay: true,
-                    onPageChanged: (index, reason) {
-                      setState(() {
-                        // Update current index if needed
-                      });
-                    },
+              SizedBox(
+                width: MediaQuery.of(context).size.width,
+                child: Expanded(
+                  child: CarouselSlider(
+                    options: CarouselOptions(
+                      /* height: 200.0, */
+                      enableInfiniteScroll: true,
+                      enlargeCenterPage: true,
+                      autoPlay: true,
+                      onPageChanged: (index, reason) {
+                        setState(() {
+                          // Update current index if needed
+                        });
+                      },
+                    ),
+                    items: widget.point.photos.map((url) {
+                      return Container(
+                        margin: const EdgeInsets.symmetric(horizontal: 5.0),
+                        child: Image.network(
+                          url.url,
+                          fit: BoxFit.cover,
+                          loadingBuilder: (context, child, loadingProgress) {
+                            if (loadingProgress == null) return child;
+                            return Center(
+                              child: CircularProgressIndicator(
+                                value: loadingProgress.expectedTotalBytes !=
+                                        null
+                                    ? loadingProgress.cumulativeBytesLoaded /
+                                        (loadingProgress.expectedTotalBytes ??
+                                            1)
+                                    : null,
+                              ),
+                            );
+                          },
+                          errorBuilder: (context, error, stackTrace) {
+                            return const Center(child: Icon(Icons.error));
+                          },
+                        ),
+                      );
+                    }).toList(),
                   ),
-                  items: widget.point.photos.map((url) {
-                    return Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 5.0),
-                      child: Image.network(
-                        url.url,
-                        fit: BoxFit.cover,
-                        loadingBuilder: (context, child, loadingProgress) {
-                          if (loadingProgress == null) return child;
-                          return Center(
-                            child: CircularProgressIndicator(
-                              value: loadingProgress.expectedTotalBytes != null
-                                  ? loadingProgress.cumulativeBytesLoaded /
-                                      (loadingProgress.expectedTotalBytes ?? 1)
-                                  : null,
-                            ),
-                          );
-                        },
-                        errorBuilder: (context, error, stackTrace) {
-                          return const Center(child: Icon(Icons.error));
-                        },
-                      ),
-                    );
-                  }).toList(),
                 ),
               ),
             const SizedBox(height: 24.0),

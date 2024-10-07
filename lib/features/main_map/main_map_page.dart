@@ -52,20 +52,14 @@ class _MainMapPageState extends State<MainMapPage> {
     super.initState();
     _setInitialLocation();
 
-    getUser();
-  }
-
-  Future<void> _setInitialLocation() async {
-    try {
-      // Request permission and get the current position
-      final position = await AppLocationUtils.determinePosition();
-      initialLocation = LatLng(position.latitude, position.longitude);
-
-      _controller?.animateCamera(CameraUpdate.newLatLng(initialLocation));
-      setState(() {});
-    } catch (e) {
-      // If there's an error, fallback to the default initialLocation
-      print('Error getting user location: $e');
+    // Check if the user is logged in
+    if (FirebaseAuth.instance.currentUser == null) {
+      // Show the dialog if not logged in
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _showLoginRequiredDialog();
+      });
+    } else {
+      getUser(); // If logged in, proceed with fetching the user details
     }
   }
 
@@ -191,6 +185,42 @@ class _MainMapPageState extends State<MainMapPage> {
           ),
         ],
       ),
+    );
+  }
+
+  Future<void> _setInitialLocation() async {
+    try {
+      // Request permission and get the current position
+      final position = await AppLocationUtils.determinePosition();
+      initialLocation = LatLng(position.latitude, position.longitude);
+
+      _controller?.animateCamera(CameraUpdate.newLatLng(initialLocation));
+      setState(() {});
+    } catch (e) {
+      // If there's an error, fallback to the default initialLocation
+      print('Error getting user location: $e');
+    }
+  }
+
+  void _showLoginRequiredDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Iniciar sesión requerido'),
+          content: const Text(
+              'Debe iniciar sesión para acceder a esta funcionalidad.'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                handleLogin(); // Trigger login flow
+              },
+              child: const Text('Aceptar'),
+            ),
+          ],
+        );
+      },
     );
   }
 
