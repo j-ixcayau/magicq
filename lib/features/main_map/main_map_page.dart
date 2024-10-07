@@ -43,8 +43,8 @@ class _MainMapPageState extends State<MainMapPage> {
   (int, List<Medal>)? medalInfo;
 
   final mapsInfoTypes = [
-    'Ayuda',
-    'Avisos',
+    'Mostrar ayuda',
+    'Avisos de la comunidad',
   ];
 
   @override
@@ -168,7 +168,7 @@ class _MainMapPageState extends State<MainMapPage> {
                 children: [
                   ElevatedButton.icon(
                     onPressed: navigateToCuriosityInfo,
-                    label: const Text('Curiosidades de mi ubicación'),
+                    label: const Text('Curiosidades de mi comunidad'),
                     icon: const Icon(Icons.info), // Added icon
                     style: ElevatedButton.styleFrom(
                       minimumSize:
@@ -201,13 +201,13 @@ class _MainMapPageState extends State<MainMapPage> {
     try {
       await AuthUtils.auth();
 
-      getUser();
+      await getUser();
     } catch (e) {
       log('Error during Google sign-in: $e');
     }
   }
 
-  void getUser() async {
+  Future<void> getUser() async {
     final fbUser = FirebaseAuth.instance.currentUser;
     if (fbUser == null) {
       return;
@@ -232,6 +232,10 @@ class _MainMapPageState extends State<MainMapPage> {
 
     medalInfo = await MedalService.get(userId);
     setState(() {});
+
+    if (_markers.isEmpty) {
+      onInfoMapTap('Avisos de la comunidad');
+    }
   }
 
   void onInfoMapTap(String value) async {
@@ -239,7 +243,7 @@ class _MainMapPageState extends State<MainMapPage> {
 
     selectedMapInfo = value;
 
-    if (value == 'Ayuda') {
+    if (value == 'Mostrar ayuda') {
       final markers = await MarkerService.get();
 
       for (var it in markers) {
@@ -253,7 +257,7 @@ class _MainMapPageState extends State<MainMapPage> {
         );
         _markers.add(marker);
       }
-    } else if (value == 'Avisos') {
+    } else if (value == 'Avisos de la comunidad') {
       final points = await PointService.get();
 
       for (var it in points) {
