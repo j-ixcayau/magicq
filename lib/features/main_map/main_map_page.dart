@@ -47,6 +47,8 @@ class _MainMapPageState extends State<MainMapPage> {
     'Avisos de la comunidad',
   ];
 
+  bool _isLoadingCuriosity = false;
+
   @override
   void initState() {
     super.initState();
@@ -163,7 +165,9 @@ class _MainMapPageState extends State<MainMapPage> {
                   ElevatedButton.icon(
                     onPressed: navigateToCuriosityInfo,
                     label: const Text('Curiosidades de mi comunidad'),
-                    icon: const Icon(Icons.info), // Added icon
+                    icon: _isLoadingCuriosity
+                        ? const CircularProgressIndicator()
+                        : const Icon(Icons.info), // Added icon
                     style: ElevatedButton.styleFrom(
                       minimumSize:
                           const Size(double.infinity, 48), // Full width
@@ -335,21 +339,36 @@ class _MainMapPageState extends State<MainMapPage> {
     getUser();
   }
 
-  void navigateToCuriosityInfo() async {
-    final info = await ClimateService.get(initialLocation, userName ?? 'MagiQ');
-
-    if (info == null) {
+  Future<void> navigateToCuriosityInfo() async {
+    if (_isLoadingCuriosity) {
       return;
     }
 
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => CuriosityPage(
-          info: info,
-        ),
-      ),
-    );
+    setState(() {
+      _isLoadingCuriosity = true; // Show loading spinner
+    });
+
+    try {
+      final info =
+          await ClimateService.get(initialLocation, userName ?? 'MagiQ');
+
+      if (info != null) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => CuriosityPage(
+              info: info,
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      print('Error fetching curiosity info: $e');
+    } finally {
+      setState(() {
+        _isLoadingCuriosity = false; // Hide loading spinner
+      });
+    }
   }
 
   void onMedalTap() {
